@@ -47,7 +47,6 @@ final class Echonest {
         $format = 'json';
 
         if(is_array($options)) {
-            $http->setUri( self::$source . $api . '/' . $command);
             $options['api_key'] = self::getApiKey();
 
             if (!isset($options['format'])) {
@@ -56,7 +55,11 @@ final class Echonest {
                 $format = $options['format'];
             }
 
-            $http->setParameterGet($options);
+            //build query manually as $http->setParameterGet builds arrays properly, echonest api is not standard :/
+            //we need ?bucket=audio_summary&bucket=artist_discovery NOT ?bucket[0]=audio_summary&bucket[1]=artist_discovery
+            $http_query=http_build_query($options); 
+            $http_query=preg_replace('/%5B[0-9]+%5D/simU', '', $http_query); //strip array indexes
+            $http->setUri(self::$source . $api . '/' . $command . '?' . $http_query);
         } else {
             #options as a query string
             if (!$options )
